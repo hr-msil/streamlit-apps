@@ -321,9 +321,9 @@ def agregar_total(df_anterior: pd.DataFrame, df_actual:pd.DataFrame) -> None:
 def unir_oficinas(df_anterior: pd.DataFrame,df_actual: pd.DataFrame) -> pd.DataFrame:
 
   # Supongo que las oficinas estan en ambos dataSets
-  df_area = pd.DataFrame(columns = ["Oficina", "Dif. horas extras_86", "Dif. valor_86",
-                                  "Dif. horas extras_87", "Dif. valor_87",
-                                  "Dif.horas extras_89", "Dif. valor_89","Dif. porcentual",
+  df_area = pd.DataFrame(columns = ["Oficina", "Dif. horas extras normales", "Dif. liquidado normales",
+                                  "Dif. horas extras al 50", "Dif. liquidado al 50",
+                                  "Dif.horas extras al 100", "Dif. liquidado al 100","Dif. porcentual",
                                   "Dif. porcentual ponderado"])
 
   oficinas = []
@@ -473,12 +473,12 @@ def unir_oficinas(df_anterior: pd.DataFrame,df_actual: pd.DataFrame) -> pd.DataF
 
 
   df_area["Oficina"] = oficinas
-  df_area["Dif. horas extras_86"] = dif_horas_86
-  df_area["Dif. valor_86"] = dif_valor_86
-  df_area["Dif. horas extras_87"] = dif_horas_87
-  df_area["Dif. valor_87"] = dif_valor_87
-  df_area["Dif.horas extras_89"] = dif_horas_89
-  df_area["Dif. valor_89"] = dif_valor_89
+  df_area["Dif. horas extras normales"] = dif_horas_86
+  df_area["Dif. liquidado normales"] = dif_valor_86
+  df_area["Dif. horas extras al 50"] = dif_horas_87
+  df_area["Dif. liquidado al 50"] = dif_valor_87
+  df_area["Dif.horas extras al 100"] = dif_horas_89
+  df_area["Dif. liquidado al 100"] = dif_valor_89
   df_area["Dif. horas total"] = dif_horas_total
   df_area["Dif. valor total"] = dif_valor_total
   df_area["Dif. porcentual"] = dif_porcentual_horas
@@ -489,7 +489,7 @@ def unir_oficinas(df_anterior: pd.DataFrame,df_actual: pd.DataFrame) -> pd.DataF
 
 def unir_personas(df_1, df_2):
 
-  df_personas = pd.DataFrame(columns = ["Legajo", "Nombre", "Oficina","Dif. horas extras", "Dif. valor"])
+  df_personas = pd.DataFrame(columns = ["Legajo", "Nombre", "Oficina","Dif. horas extras", "Dif. liquidado"])
 
   dif_horas = []
   dif_valor = []
@@ -547,7 +547,7 @@ def unir_personas(df_1, df_2):
   df_personas["Legajo"] = legajos
   df_personas["Nombre"] = nombres
   df_personas["Dif. horas extras"] = dif_horas
-  df_personas["Dif. valor"] = dif_valor
+  df_personas["Dif. liquidado"] = dif_valor
   df_personas["Oficina"] = oficinas
 
   return df_personas
@@ -562,8 +562,9 @@ def resumen_oficinas(df):
 
   oficinas_unicas = df["Oficina"].unique()
 
-  df_area_total = pd.DataFrame(columns = ["Oficina", "Total horas 86", "Total valor 86",
-                                          "Total horas 87", "Total valor 87", "Total horas 89", "Total valor 89"])
+  df_area_total = pd.DataFrame(columns = ["Oficina", "Total horas normales", "Total liquidado normales",
+                                          "Total horas al 50", "Total liquidado al 50", "Total horas al 100",
+                                          "Total liquidado al 100"])
 
   oficinas = []
   total_hora_86 = []
@@ -597,29 +598,38 @@ def resumen_oficinas(df):
     total_valor_89.append(valor_89)
 
   df_area_total["Oficina"] = oficinas
-  df_area_total["Total horas 86"] = total_hora_86
-  df_area_total["Total valor 86"] = total_valor_86
-  df_area_total["Total horas 87"] = total_hora_87
-  df_area_total["Total valor 87"] = total_valor_87
-  df_area_total["Total horas 89"] = total_hora_89
-  df_area_total["Total valor 89"] = total_valor_89
+  df_area_total["Total horas normales"] = total_hora_86
+  df_area_total["Total liquidado normales"] = total_valor_86
+  df_area_total["Total horas al 50"] = total_hora_87
+  df_area_total["Total liquidado al 50"] = total_valor_87
+  df_area_total["Total horas al 100"] = total_hora_89
+  df_area_total["Total liquidado al 100"] = total_valor_89
 
   return df_area_total
 
 
 ## STREAMLIT
 
-# Fecha y hora actual
+from datetime import datetime, timedelta
+
 ahora = datetime.now()
 
-# Formatear como string para el nombre de archivo
-fecha_str = ahora.strftime("%Y-%m")
+# Obtener el primer día del mes actual
+primer_dia_mes = ahora.replace(day=1)
+
+# Restar un día para ir al último día del mes anterior
+mes_anterior_fecha = primer_dia_mes - timedelta(days=1)
+
+# Formatear como "YYYY-MM"
+mes_anterior_str = mes_anterior_fecha.strftime("%Y-%m")
+
+
 
 st.title("📝 Horas extras Assistant")
 
 st.markdown(
     """
-    Bienvenido!  
+    Bienvenido!   
     Por favor, sube los archivos correspondientes al mes anterior y al mes actual.  
     Si hay dos liquidaciones, sube ambos archivos juntos.
     """
@@ -702,9 +712,9 @@ if archivos_1 and archivos_2:
     df_personas.to_excel(output2, index=False)
     df_area_total.to_excel(output3, index = False)
 
-    nombre_archivo_1 = f"Dif. horas extras por oficina_{fecha_str}.xlsx"
-    nombre_archivo_2 = f"Dif. horas extras por persona_{fecha_str}.xlsx"
-    nombre_archivo_3 = f"Reporte horas extras mes actual_{fecha_str}.xlsx"
+    nombre_archivo_1 = f"Dif. horas extras por oficina_{mes_anterior_str}.xlsx"
+    nombre_archivo_2 = f"Dif. horas extras por persona_{mes_anterior_str}.xlsx"
+    nombre_archivo_3 = f"Reporte horas extras mes actual_{mes_anterior_str}.xlsx"
 
     st.download_button(
         label="📂 Descargar planilla de horas extras por oficina",
