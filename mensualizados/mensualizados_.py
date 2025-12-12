@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import io
+from openpyxl import load_workbook
+from openpyxl.styles import numbers
 
 #---------- Funciones principales -----------
 
@@ -15,7 +17,7 @@ def borrar_ultimas_columnas(df: pd.DataFrame, n: int) -> pd.DataFrame:
     
     :param df: DataFrame completo
     :param n: Cantidad de últimas columnas a borrar
-    :return: Devuelve el dataFrame original sin las últimas n columnas
+    :return: Devuelve el dataFrame original sin las últimas n columnas.
     """
 
     cant_columnas = df.shape[1]
@@ -105,26 +107,62 @@ else:
 
             for df_oficina in df_oficinas:
                 oficina = df_oficina["Oficina"].unique() # Array de valores unicos
+                
                 outputi = io.BytesIO()
+
                 df_oficina.to_excel(outputi, index=False)
-                outputi.seek(0)  # importante
+
+                outputi.seek(0)
                 nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}.xlsx"
+
+                #Para cambiar el formato de la fecha
+                wb = load_workbook(outputi)
+                ws = wb.active
+
+                columnas_fecha = ["H", "I"] #Columnas en formato fecha
+
+                for col in columnas_fecha:
+                    for cell in ws[col]:
+                        cell.number_format = "DD/MM/YYYY" #Formato día, mes, año (en el excel se sigue manteniendo tipo de dato fecha)
+
+                outputi2 = io.BytesIO()
+                wb.save(outputi2)
+                outputi2.seek(0)
+
                 st.download_button(
-                label=f"📂 Descargar planilla de mensualizados de la oficina {oficina[0]}",
-                data=outputi.getvalue(),
-                file_name=nombre_archivo_i,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+                    label="📂 Descargar planilla de mensualizados",
+                    data=outputi2.getvalue(),
+                    file_name=nombre_archivo_i,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
         else:
 
             df = borrar_ultimas_columnas(df,3)
-
             outputi = io.BytesIO()
+
             df.to_excel(outputi, index=False)
+
+            outputi.seek(0)
             nombre_archivo_i = f"{opcion}.xlsx"
+
+            #Para cambiar el formato de la fecha
+            wb = load_workbook(outputi)
+            ws = wb.active
+
+            columnas_fecha = ["H", "I"] #Columnas en formato fecha
+
+            for col in columnas_fecha:
+                for cell in ws[col]:
+                    cell.number_format = "DD/MM/YYYY" #Formato en día, mes, año (en el excel sigue manteniendo tipo date)
+
+            outputi2 = io.BytesIO()
+            wb.save(outputi2)
+            outputi2.seek(0)
+
             st.download_button(
-            label="📂 Descargar planilla de mensualizados",
-            data=outputi.getvalue(),
-            file_name=nombre_archivo_i,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                label="📂 Descargar planilla de mensualizados",
+                data=outputi2.getvalue(),
+                file_name=nombre_archivo_i,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
