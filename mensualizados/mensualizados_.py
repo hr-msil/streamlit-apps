@@ -80,7 +80,7 @@ opciones = [
 st.subheader("Elegir el área del cuál se está subiendo el archivo:")
 
 opcion = st.selectbox(
-    "",
+    "Elegir una opción",
     opciones
 )
 
