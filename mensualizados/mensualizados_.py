@@ -98,9 +98,14 @@ else:
     if archivo_1:
 
         df = pd.read_excel(archivo_1)
+        # 1. Filtrar filas donde la columna no esté vacía
+        df = df[df["Fecha Egreso Cargo"].notna() & (df["Fecha Egreso Cargo"] != "")]
+        
+        # 2. Reemplazar en Categoría
+        df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
         if opcion == "SALUD PUBLICA" or opcion == "AMBIENTE Y ESPACIO PUBLICO":
-
+            
             df = borrar_ultimas_columnas(df, 3)
 
             df_oficinas = dividir_oficinas(df)
@@ -166,3 +171,4 @@ else:
                 file_name=nombre_archivo_i,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
