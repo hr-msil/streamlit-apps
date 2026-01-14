@@ -99,7 +99,7 @@ else:
 
         df = pd.read_excel(archivo_1)
         # 1. Filtrar filas donde la columna no esté vacía
-        df = df[df["Fecha Egreso Cargo"].notna() & (df["Fecha Egreso Cargo"].str.strip() != "")]
+        df = df[(df["Fecha Egreso Cargo"].notna()) & (df["Fecha Egreso Cargo"].str.strip() != "")]
         
         # 2. Reemplazar en Categoría
         df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
@@ -171,6 +171,7 @@ else:
                 file_name=nombre_archivo_i,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
 
 
 
