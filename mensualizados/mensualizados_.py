@@ -141,11 +141,11 @@ else:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-       '''
+'''
            else:
 
             df = borrar_ultimas_columnas(df,3)
-            outputi = io.BytesIO()
+            outputi = o.BytesIO()
 
             df.to_excel(outputi, index=False)
 
@@ -171,9 +171,10 @@ else:
                 data=outputi2.getvalue(),
                 file_name=nombre_archivo_i,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-    '''
-
+            
+            
+            
+'''
 
 
 
