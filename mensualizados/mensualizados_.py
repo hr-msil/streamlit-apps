@@ -20,11 +20,14 @@ def borrar_ultimas_columnas(df: pd.DataFrame, n: int) -> pd.DataFrame:
     :return: Devuelve el dataFrame original sin las últimas n columnas.
     """
 
+    
     cant_columnas = df.shape[1]
 
     columnas_a_eliminar = range(cant_columnas - n, cant_columnas)
 
     df = df.drop(df.columns[columnas_a_eliminar], axis=1)
+
+
 
     return df
 
@@ -99,20 +102,25 @@ else:
 
         df = pd.read_excel(archivo_1)
         # 1. Filtrar filas donde la columna no esté vacía
+        #df = df[(df["Fecha Egreso Cargo"].notna()) & (df["Fecha Egreso Cargo"].str.strip() != "")]
         df = df[df["Fecha Egreso Cargo"].notna()]
-        
+
         # 2. Reemplazar en Categoría
         df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
-        
-            
+    
+
         df = borrar_ultimas_columnas(df, 3)
 
+
         df_oficinas = dividir_oficinas(df)
+        
 
         for df_oficina in df_oficinas:
-            oficina = df_oficina["Oficina"].unique() # Array de valores unicos
+
             
+            oficina = df_oficina["Oficina"].unique() # Array de valores unicos
+
             outputi = io.BytesIO()
 
             df_oficina.to_excel(outputi, index=False)
@@ -141,11 +149,4 @@ else:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-
-
-
-
-
-
-
-
+    
