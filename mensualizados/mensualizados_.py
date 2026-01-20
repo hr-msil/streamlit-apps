@@ -141,40 +141,8 @@ else:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-'''
-           else:
 
-            df = borrar_ultimas_columnas(df,3)
-            outputi = o.BytesIO()
 
-            df.to_excel(outputi, index=False)
-
-            outputi.seek(0)
-            nombre_archivo_i = f"{opcion}.xlsx"
-
-            #Para cambiar el formato de la fecha
-            wb = load_workbook(outputi)
-            ws = wb.active
-
-            columnas_fecha = ["H", "I"] #Columnas en formato fecha
-
-            for col in columnas_fecha:
-                for cell in ws[col]:
-                    cell.number_format = "DD/MM/YYYY" #Formato en día, mes, año (en el excel sigue manteniendo tipo date)
-
-            outputi2 = io.BytesIO()
-            wb.save(outputi2)
-            outputi2.seek(0)
-
-            st.download_button(
-                label="📂 Descargar planilla de mensualizados",
-                data=outputi2.getvalue(),
-                file_name=nombre_archivo_i,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            
-            
-            
-'''
 
 
 
