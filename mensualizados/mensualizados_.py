@@ -104,44 +104,45 @@ else:
         # 2. Reemplazar en Categoría
         df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
-        if opcion == "SALUD PUBLICA" or opcion == "AMBIENTE Y ESPACIO PUBLICO":
+        
             
-            df = borrar_ultimas_columnas(df, 3)
+        df = borrar_ultimas_columnas(df, 3)
 
-            df_oficinas = dividir_oficinas(df)
+        df_oficinas = dividir_oficinas(df)
 
-            for df_oficina in df_oficinas:
-                oficina = df_oficina["Oficina"].unique() # Array de valores unicos
-                
-                outputi = io.BytesIO()
+        for df_oficina in df_oficinas:
+            oficina = df_oficina["Oficina"].unique() # Array de valores unicos
+            
+            outputi = io.BytesIO()
 
-                df_oficina.to_excel(outputi, index=False)
+            df_oficina.to_excel(outputi, index=False)
 
-                outputi.seek(0)
-                nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}.xlsx"
+            outputi.seek(0)
+            nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}.xlsx"
 
-                #Para cambiar el formato de la fecha
-                wb = load_workbook(outputi)
-                ws = wb.active
+            #Para cambiar el formato de la fecha
+            wb = load_workbook(outputi)
+            ws = wb.active
 
-                columnas_fecha = ["H", "I"] #Columnas en formato fecha
+            columnas_fecha = ["H", "I"] #Columnas en formato fecha
 
-                for col in columnas_fecha:
-                    for cell in ws[col]:
-                        cell.number_format = "DD/MM/YYYY" #Formato día, mes, año (en el excel se sigue manteniendo tipo de dato fecha)
+            for col in columnas_fecha:
+                for cell in ws[col]:
+                    cell.number_format = "DD/MM/YYYY" #Formato día, mes, año (en el excel se sigue manteniendo tipo de dato fecha)
 
-                outputi2 = io.BytesIO()
-                wb.save(outputi2)
-                outputi2.seek(0)
+            outputi2 = io.BytesIO()
+            wb.save(outputi2)
+            outputi2.seek(0)
 
-                st.download_button(
-                    label=f"Descargar planilla de la oficina: {oficina[0]}",
-                    data=outputi2.getvalue(),
-                    file_name=nombre_archivo_i,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+            st.download_button(
+                label=f"Descargar planilla de la oficina: {oficina[0]}",
+                data=outputi2.getvalue(),
+                file_name=nombre_archivo_i,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
-        else:
+       '''
+           else:
 
             df = borrar_ultimas_columnas(df,3)
             outputi = io.BytesIO()
@@ -171,6 +172,8 @@ else:
                 file_name=nombre_archivo_i,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+    '''
+
 
 
 
