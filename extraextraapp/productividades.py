@@ -35,7 +35,7 @@ def lectura_archivo_dec(archivo_dec: str):
         df_decreto = df_decreto.iloc[:,:4]
 
     df_decreto.columns = ["Legajo", "Nula", "Nula2", "Importe"] #Renombro las columnas
-    df_decreto = df_decreto.dropna() # Elimino las filas con algún Nan
+    df_decreto = df_decreto.dropna(how="all") # Elimino las filas con algún Nan
     df_decreto["Legajo"] = df_decreto["Legajo"].astype('Int64') #Cambio tipo del Legajo para que tipe con df_prod
     df_decreto.sort_values(by = "Legajo") #Ordeno según legajo
 
@@ -45,7 +45,7 @@ def lectura_archivo_dec(archivo_dec: str):
 
 def limpieza_decreto(df: pd.DataFrame) -> None:
     '''
-    Modifica la columna "Leyenda" del dataFrame correspondiente al archivo subido del sistema para que el decreto quede de la forma num/num.
+    Modifica la columna "Leyenda" del dataFrame correspondiente al archivo subido del sistema para que el decreto quede de la forma num_dec/año.
     
     :param df: Description
     :type df: pd.DataFrame
@@ -61,7 +61,7 @@ def limpieza_decreto(df: pd.DataFrame) -> None:
             st.write("La fila ", i + 2, " no tiene leyenda detallada." )
             st.divider()
         else:
-            decreto_prod = leyenda.split(" ")[1]
+            decreto_prod = leyenda.split(" ")[1] #VER Qué pasa si no se puede splitear por espacio?? tira error!
             df.loc[i,"Leyenda"] = decreto_prod
 
     df["Leyenda"] = df["Leyenda"].astype('str')
@@ -72,7 +72,7 @@ def limpieza_decreto(df: pd.DataFrame) -> None:
 
 def obtener_decreto(nombre_archivo: str) -> str:
     '''
-    Dado el nombre del archivo, le quita la extensión .csv. Si el decreto está separado por "-", lo convierte a la forma num/num.
+    Dado el nombre del archivo, le quita la extensión .csv. Si el decreto está separado por "-", lo convierte a la forma nro_dec/año.
     
     :param nombre_archivo: Description
     :type nombre_archivo: str
@@ -82,7 +82,7 @@ def obtener_decreto(nombre_archivo: str) -> str:
 
     decreto = nombre_archivo.split(".")[0] #Con esto saco la extension .csv
     decreto = decreto.split(" ")
-    decreto = decreto[0].split("-")[0] + "/" +decreto[0].split("-")[1] #Lo renombro a tipo num/año
+    decreto = decreto[0].split("-")[0] + "/" + decreto[0].split("-")[1] #Lo renombro a tipo nro_dec/año
 
     return decreto
 
@@ -223,6 +223,7 @@ with tab2:
                 st.write("En el archivo: ",nombres_inconsistencias[i]," no se encontraron estos importes para estos legajos:  ")
 
                 st.write(df)
+
 
 
 
