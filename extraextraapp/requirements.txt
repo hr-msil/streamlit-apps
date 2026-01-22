@@ -2,3 +2,4 @@ streamlit==1.46.1
 pandas
 xlrd
 xlsxwriter
+numpy
