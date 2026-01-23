@@ -9,6 +9,113 @@ import numpy as np
 import io
 
 
+###################
+# CHEQUEO LEGAJOS #
+###################
+
+#Antes de hacer todo los chequeos, hay que chequear si todos los legajos que manda la oficina son eectivamente,
+#de la oficina correspondiente
+
+def tipo_de_fila_cl(fila):
+
+    if fila["Legajo"] == "OFICINA: ":
+
+        if fila["Nombre"] == 2026:
+
+            return 0, fila["Oficina"]
+        
+        else:
+
+            return 2,0
+    
+    else:
+
+        return 1, fila["Legajo"]
+    
+def crear_df(df: pd.DataFrame) -> pd.DataFrame:
+
+    cant_filas = df.shape[0]
+    
+
+    legajos = []
+    oficinas = []
+    oficina_actual = 0
+
+    for i in range(cant_filas):
+
+        fila = df.iloc[i]
+
+        tipo, dato = tipo_de_fila_cl(fila)
+
+        if tipo == 0:
+            oficina_actual = dato
+        elif tipo == 1:
+            legajos.append(dato)
+            oficinas.append(oficina_actual)
+        
+
+    df_res = pd.DataFrame({"Legajo": legajos, "Oficina": oficinas})
+    df_res = df_res[df_res["Oficina"] != 0]
+    df_res["Legajo"] = df_res["Legajo"].astype('Int64')
+    df_res["Oficina"] = df_res["Oficina"].astype('Int64')
+
+    return df_res
+    
+def leer_archivo_leg_of(nombre_archivo:str) -> pd.DataFrame:
+    
+    legajos_por_oficina = pd.read_excel(nombre_archivo)
+
+    ultima_fila = legajos_por_oficina.shape[0]
+
+    legajos_por_oficina = legajos_por_oficina.iloc[:ultima_fila - 1,:3]
+
+    legajos_por_oficina.columns = ["Legajo", "Nombre", "Oficina"]
+
+    df_res = crear_df(legajos_por_oficina)
+
+    return df_res
+
+def leer_archivo_oficina(nombre_archivo_oficina:str) -> pd.DataFrame:
+
+    df = pd.read_excel(nombre_archivo_oficina)
+
+    df = df.iloc[:,0]
+    
+    df = df.dropna()
+
+    df = df.astype('Int64')
+
+    return df
+
+def buscar_legajos(legajos_a_buscar: pd.DataFrame, legajos_oficina: pd.DataFrame) -> list[int]:
+
+    no_encontrados = []
+
+    legajos = legajos_a_buscar.unique()
+
+    for legajo in legajos:
+
+        print("Legajo a buscar: ", legajo)
+
+        legajo_buscado = legajos_oficina[legajos_oficina["Legajo"] == legajo]
+        legajo_buscado = legajo_buscado["Legajo"]
+
+        print("Legajo encontrado: ", legajo_buscado)
+
+        s = legajo_buscado == legajo
+        
+        if s.any():
+
+            continue
+
+        else:
+            
+            no_encontrados.append(legajo)
+
+    return no_encontrados
+        
+
+
 ##############
 # Armado CSV #
 ##############
@@ -1346,9 +1453,65 @@ def imprimir_no_coinciden(dict):
 #############################
 st.title("Asistencia's Assistant 🤖")
 
-tab1, tab2, tab3 = st.tabs(["Armar CSV","Variación intermensual","Extra Extra"])
+tab1, tab2, tab3, tab4 = st.tabs(["Comparación de Legajos","Armar CSV","Variación intermensual","Extra Extra"])
 
 with tab1:
+
+   
+    st.subheader("Comparación de legajos por oficina")
+
+    oficinas = None
+    st.write("Ingresá las oficinas en un listado con comas, si querés indicar rangos de oficinas separalas por un guion. No uses espacios entre cada uno.")
+    st.write("Por ejemplo si ingresás '100-102,200,310' es que querés procesar las oficinas 100, 101, 102, 200 y 310")
+
+    oficinas = st.text_area("Escribí las oficinas y presiona Ctrl + Enter")
+
+    oficinas = procesar_oficinas(oficinas)
+
+    
+
+    st.markdown("Subir el archivo de los legajos para todas las oficinas")
+
+    archivo_legajos_oficina = st.file_uploader("Seleccionar archivo", type = "xls",key = "archivo_legajos_oficina")
+
+    st.markdown("Subir el archivo correspondiente a las horas extras de las oficinas")
+
+    archivo_hhee_oficina = st.file_uploader("Seleccionar archivo", type = "xls", key = "archivo_hhee_oficina")
+
+    if archivo_legajos_oficina and archivo_hhee_oficina:
+
+        #nro_oficina = archivo_hhee_oficina.name.split(".")[0]
+        #nro_oficina = int(nro_oficina)
+
+        df_legajos_oficina = leer_archivo_leg_of(archivo_legajos_oficina)
+
+        planilla_hhee = pd.read_excel(archivo_hhee_oficina)
+
+        df_hhee_norm = normalizar_planilla_hhee(planilla_hhee)
+        df_hhee = df_hhee_norm["legajo"].astype('Int64')
+        #legajos = df_hhee_norm["legajo"].unique()
+        if oficinas:
+            oficinas_int = np.array(oficinas, dtype=int)
+            df_legajos_oficina = df_legajos_oficina[df_legajos_oficina["Oficina"].isin(oficinas_int)]
+
+        no_encontrados = buscar_legajos(df_hhee, df_legajos_oficina)
+
+        if len(no_encontrados) > 0:
+        
+            st.write("Estos son los legajos no encontrados en la oficinas: ", oficinas_int)
+
+        
+            for legajo in no_encontrados:
+            
+
+                st.write("""-""", legajo)
+
+        else:
+        
+            st.write("Los legajos coinciden con el número de la oficina correspondiente")
+
+
+with tab2:
     st.subheader("📝Comparación con ausencias y armado del CSV")
     planilla_csv = st.file_uploader("Subí la planilla de horas extras")
     ausencias = st.file_uploader("Subí la planilla de ausencias")
@@ -1396,7 +1559,7 @@ with tab1:
            key='download_diferencias_no_index'
         )
 
-with tab2:
+with tab3:
 
     ahora = datetime.now()
 
@@ -1514,82 +1677,82 @@ with tab2:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-with tab3:
-   st.title('Extra! Extra! 🗞️')
+with tab4:
+    st.title('Extra! Extra! 🗞️')
 
-   st.header('Procedimiento')
-   with st.expander('Paso 1️⃣: Descargá el archivo de novedades'):
-     st.markdown('''
-                    - Entrar a M@JOR e ir a Informes > Informes de empleados > Empleados por novedad
-                    - Elegir partición MU
-                    - Seleccionar Novedades vigentes en el año y mes actual
-                    - Elegir variables desde @HRSEXTR1 a @HRSEXTR3
-                    - Establecer restricciones > Ejecutar
-                    - ⚠️**Importante**⚠️: exportarlo en el formato "Excel 5.0 (XLS) Tabular" y confirmar "Column headings"
-                    '''
-                    )
-        
-     archivos = None
-     oficinas = None
-     with st.expander('Paso 2️⃣: Subí todos los archivos, tanto los csvs como el de novedades descargado del sistema'):
-        archivos = st.file_uploader('Subí aca abajo los archivos arrastrando o seleccionando en \'Browse files\'',accept_multiple_files=True)
-        st.write("Ingresá las oficinas en un listado con comas, si querés indicar rangos de oficinas separalas por un guion. No uses espacios entre cada uno.")
-        st.write("Por ejemplo si ingresás '100-102,200,310' es que querés procesar las oficinas 100, 101, 102, 200 y 310")
-        st.write("Si escribís la palabra 'TODO' vas a procesar considerando todas las oficinas (aviso: seguramente aparezcan muchas personas no reportadas pero que sí figuran en sistema)")
-        oficinas = st.text_area("Escribí las oficinas o 'todo' abajo, y presioná Ctrl+Enter")
-     oficinas = procesar_oficinas(oficinas)
-
-     novedades = None
-     with st.expander('Paso 3️⃣: Procesar los datos y ver los resultados'):
-        if st.button("Procesar") and archivos:
-            # Hallar archivo de novedades
-            for archivo in archivos:
-                if archivo.name.endswith('.xls'): 
-                    novedades = archivo
-                    break
-
-            if novedades is None:
-                st.error('No subiste el archivo de novedades, hacelo en el paso 2.', icon = '🚨')
-            # Procesar
-            else:
-                resultados_sistema = procesar_novedades_sistema(novedades)
-                resultados_reporte = procesar_csvs_oficinas(archivos)
-                df,no_estan_en_sistema,no_reportados = comparar_y_armar_df(resultados_sistema,resultados_reporte,oficinas)
-
-                with st.expander('Ver resultados'):
-                    if len(no_estan_en_sistema) > 0:
-                        st.write("1) Estos legajos fueron reportados pero no cargados en el sistema.")
-                        with st.expander("Ver más"):
-                            imprimir_lista(no_estan_en_sistema)
-                    else: 
-                        st.write("1) Todos los legajos reportados están cargados al sistema.")
-                    
-                    if len(no_reportados) > 0:
-                        st.write("2) Estos legajos no fueron reportados por las oficinas pero están cargados en el sistema.")
-                        with st.expander("Ver más"):
-                            imprimir_lista(no_reportados)
-                    else:  
-                        st.write("2) Todos los legajos de las oficinas dadas están reportados.")
-
-                    buffer = io.BytesIO()
-                    if df is not None:
-                        st.write("3) Se encontraron las siguientes inconsistencias:")
-                        st.write(df)
-                        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                            df.to_excel(writer, sheet_name='inconsistencias_hrs_extra', index=True)
-                        buffer.seek(0)
-                        st.download_button(
-                            label="Descargar resultados",
-                            data=buffer,
-                            file_name="inconsistencias_hrs_extra.xlsx",
-                            mime="application/vnd.ms-excel",
-                            icon=":material/download:",
+    st.header('Procedimiento')
+    with st.expander('Paso 1️⃣: Descargá el archivo de novedades'):
+        st.markdown('''
+                        - Entrar a M@JOR e ir a Informes > Informes de empleados > Empleados por novedad
+                        - Elegir partición MU
+                        - Seleccionar Novedades vigentes en el año y mes actual
+                        - Elegir variables desde @HRSEXTR1 a @HRSEXTR3
+                        - Establecer restricciones > Ejecutar
+                        - ⚠️**Importante**⚠️: exportarlo en el formato "Excel 5.0 (XLS) Tabular" y confirmar "Column headings"
+                        '''
                         )
-                    else:
-                        st.write("3) No se encontraron inconsistencias entre lo reportado y el sistema.")
+            
+        archivos = None
+        oficinas = None
+        with st.expander('Paso 2️⃣: Subí todos los archivos, tanto los csvs como el de novedades descargado del sistema'):
+            archivos = st.file_uploader('Subí aca abajo los archivos arrastrando o seleccionando en \'Browse files\'',accept_multiple_files=True)
+            st.write("Ingresá las oficinas en un listado con comas, si querés indicar rangos de oficinas separalas por un guion. No uses espacios entre cada uno.")
+            st.write("Por ejemplo si ingresás '100-102,200,310' es que querés procesar las oficinas 100, 101, 102, 200 y 310")
+            st.write("Si escribís la palabra 'TODO' vas a procesar considerando todas las oficinas (aviso: seguramente aparezcan muchas personas no reportadas pero que sí figuran en sistema)")
+            oficinas = st.text_area("Escribí las oficinas o 'todo' abajo, y presioná Ctrl+Enter")
+        oficinas = procesar_oficinas(oficinas)
 
-                    nombres_no_coinciden = comparar_nombres(resultados_sistema,resultados_reporte)
+        novedades = None
+        with st.expander('Paso 3️⃣: Procesar los datos y ver los resultados'):
+            if st.button("Procesar") and archivos:
+                # Hallar archivo de novedades
+                for archivo in archivos:
+                    if archivo.name.endswith('.xls'): 
+                        novedades = archivo
+                        break
 
-                    if len(nombres_no_coinciden) > 0:
-                        st.write('Los siguientes nombres pueden no coincidir:')
-                        imprimir_no_coinciden(nombres_no_coinciden)
+                if novedades is None:
+                    st.error('No subiste el archivo de novedades, hacelo en el paso 2.', icon = '🚨')
+                # Procesar
+                else:
+                    resultados_sistema = procesar_novedades_sistema(novedades)
+                    resultados_reporte = procesar_csvs_oficinas(archivos)
+                    df,no_estan_en_sistema,no_reportados = comparar_y_armar_df(resultados_sistema,resultados_reporte,oficinas)
+
+                    with st.expander('Ver resultados'):
+                        if len(no_estan_en_sistema) > 0:
+                            st.write("1) Estos legajos fueron reportados pero no cargados en el sistema.")
+                            with st.expander("Ver más"):
+                                imprimir_lista(no_estan_en_sistema)
+                        else: 
+                            st.write("1) Todos los legajos reportados están cargados al sistema.")
+                        
+                        if len(no_reportados) > 0:
+                            st.write("2) Estos legajos no fueron reportados por las oficinas pero están cargados en el sistema.")
+                            with st.expander("Ver más"):
+                                imprimir_lista(no_reportados)
+                        else:  
+                            st.write("2) Todos los legajos de las oficinas dadas están reportados.")
+
+                        buffer = io.BytesIO()
+                        if df is not None:
+                            st.write("3) Se encontraron las siguientes inconsistencias:")
+                            st.write(df)
+                            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                                df.to_excel(writer, sheet_name='inconsistencias_hrs_extra', index=True)
+                            buffer.seek(0)
+                            st.download_button(
+                                label="Descargar resultados",
+                                data=buffer,
+                                file_name="inconsistencias_hrs_extra.xlsx",
+                                mime="application/vnd.ms-excel",
+                                icon=":material/download:",
+                            )
+                        else:
+                            st.write("3) No se encontraron inconsistencias entre lo reportado y el sistema.")
+
+                        nombres_no_coinciden = comparar_nombres(resultados_sistema,resultados_reporte)
+
+                        if len(nombres_no_coinciden) > 0:
+                            st.write('Los siguientes nombres pueden no coincidir:')
+                            imprimir_no_coinciden(nombres_no_coinciden)
