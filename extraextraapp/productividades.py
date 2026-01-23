@@ -120,7 +120,7 @@ def comparar(df_prod_dec: pd.DataFrame, df_dec: pd.DataFrame, nombre_original: s
 
             legajo_dec = df_dec.iloc[j]["Legajo"]
             importe_dec = df_dec.iloc[j]["Importe"]
-
+            #VER no conviene hacer filter en dataframe?
             if importe_dec == importe and legajo_dec == legajo:
                 
                 existe_en_csv = True
@@ -223,6 +223,7 @@ with tab2:
                 st.write("En el archivo: ",nombres_inconsistencias[i]," no se encontraron estos importes para estos legajos:  ")
 
                 st.write(df)
+
 
 
 
