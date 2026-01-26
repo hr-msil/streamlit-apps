@@ -17,7 +17,7 @@ import io
 #de la oficina correspondiente
 
 def tipo_de_fila_cl(fila):
-
+    # TODO: Comentar, ¿cl?
     if fila["Legajo"] == "OFICINA: ":
 
         if fila["Nombre"] == 2026:
@@ -35,7 +35,6 @@ def tipo_de_fila_cl(fila):
 def crear_df(df: pd.DataFrame) -> pd.DataFrame:
 
     cant_filas = df.shape[0]
-    
 
     legajos = []
     oficinas = []
@@ -46,7 +45,7 @@ def crear_df(df: pd.DataFrame) -> pd.DataFrame:
         fila = df.iloc[i]
 
         tipo, dato = tipo_de_fila_cl(fila)
-
+        # VER ¿Y si tipo == 2?
         if tipo == 0:
             oficina_actual = dato
         elif tipo == 1:
@@ -55,7 +54,7 @@ def crear_df(df: pd.DataFrame) -> pd.DataFrame:
         
 
     df_res = pd.DataFrame({"Legajo": legajos, "Oficina": oficinas})
-    df_res = df_res[df_res["Oficina"] != 0]
+    df_res = df_res[df_res["Oficina"] != 0] # VER ¿por qué?
     df_res["Legajo"] = df_res["Legajo"].astype('Int64')
     df_res["Oficina"] = df_res["Oficina"].astype('Int64')
 
@@ -66,7 +65,7 @@ def leer_archivo_leg_of(nombre_archivo:str) -> pd.DataFrame:
     legajos_por_oficina = pd.read_excel(nombre_archivo)
 
     ultima_fila = legajos_por_oficina.shape[0]
-
+    # VER ¿por qué estas dimensiones?
     legajos_por_oficina = legajos_por_oficina.iloc[:ultima_fila - 1,:3]
 
     legajos_por_oficina.columns = ["Legajo", "Nombre", "Oficina"]
@@ -1457,7 +1456,6 @@ tab1, tab2, tab3, tab4 = st.tabs(["Comparación de Legajos","Armar CSV","Variaci
 
 with tab1:
 
-   
     st.subheader("Comparación de legajos por oficina")
 
     oficinas = None
@@ -1465,17 +1463,12 @@ with tab1:
     st.write("Por ejemplo si ingresás '100-102,200,310' es que querés procesar las oficinas 100, 101, 102, 200 y 310")
 
     oficinas = st.text_area("Escribí las oficinas y presiona Ctrl + Enter")
-
     oficinas = procesar_oficinas(oficinas)
-
     
-
     st.markdown("Subir el archivo de los legajos para todas las oficinas")
-
     archivo_legajos_oficina = st.file_uploader("Seleccionar archivo", type = "xls",key = "archivo_legajos_oficina")
 
     st.markdown("Subir el archivo correspondiente a las horas extras de las oficinas")
-
     archivo_hhee_oficina = st.file_uploader("Seleccionar archivo", type = "xls", key = "archivo_hhee_oficina")
 
     if archivo_legajos_oficina and archivo_hhee_oficina:
@@ -1494,20 +1487,12 @@ with tab1:
             oficinas_int = np.array(oficinas, dtype=int)
             df_legajos_oficina = df_legajos_oficina[df_legajos_oficina["Oficina"].isin(oficinas_int)]
 
-        no_encontrados = buscar_legajos(df_hhee, df_legajos_oficina)
+        legajos_no_encontrados = buscar_legajos(df_hhee, df_legajos_oficina)
 
-        if len(no_encontrados) > 0:
-        
+        if len(legajos_no_encontrados) > 0:
             st.write("Estos son los legajos no encontrados en la oficinas: ", oficinas_int)
-
-        
-            for legajo in no_encontrados:
-            
-
-                st.write("""-""", legajo)
-
+            imprimir_lista(legajos_no_encontrados)
         else:
-        
             st.write("Los legajos coinciden con el número de la oficina correspondiente")
 
 
@@ -1755,4 +1740,5 @@ with tab4:
 
                         if len(nombres_no_coinciden) > 0:
                             st.write('Los siguientes nombres pueden no coincidir:')
+
                             imprimir_no_coinciden(nombres_no_coinciden)
