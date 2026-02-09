@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import io
+from openpyxl import load_workbook
+from openpyxl.styles import numbers
 import xlwt
 
 #---------- Funciones principales -----------
@@ -358,4 +360,5 @@ else:
 
 
     
+
 
