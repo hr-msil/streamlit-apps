@@ -207,7 +207,7 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opci
         
 else:
     
-    agree = st.checkbox("Por favor hacer clic en la casilla si se desea separar los archivos resultantes por oficina")
+    agree = st.checkbox("Por favor, hacer clic en la casilla si se desea separar el archivo por oficinas.")
 
     st.subheader(f"📂Archivo de mensualizados del área {opcion}")
 
@@ -224,17 +224,17 @@ else:
         
 
         hoja = st.selectbox(
-        "Elegir hoja que se quiere procesar",
+        "Elegir hoja que se quiere procesar.",
         opciones_hojas
         )
 
         if hoja == "":
 
-            st.subheader("IMPORTANTE❗: seleccionar la hoja antes de continuar")
+            st.subheader("IMPORTANTE❗: seleccionar la hoja antes de continuar.")
 
         elif hoja == "HOJA":
 
-            st.subheader("Esta hoja no puede ser procesada")
+            st.subheader("Esta hoja no puede ser procesada.")
 
 
         else:
@@ -300,11 +300,11 @@ else:
                     )
 
                 if len(oficinas_nan) != 0:
-
+                    st.divider()
                     st.markdown("Estas son las oficinas que no pueden ser procesadas porque faltan completar la fecha de egreso del cargo para algunas evaluaciones. Por favor completar y volver a realizar procedimiento.")
 
                     for oficina_nan in oficinas_nan:
-                        st.write(oficina_nan)
+                        st.write("""-""" + oficina_nan)
                 
 
             else:
@@ -360,5 +360,6 @@ else:
 
 
     
+
 
 
